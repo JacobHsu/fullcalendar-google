@@ -135,6 +135,8 @@ function transformOptions(sourceOptions, start, end, timezone, calendar) {
 			var successArgs;
 			var successRes;
 
+			var movies = [];
+
 			if (data.error) {
 				reportError('Google Calendar API: ' + data.error.message, data.error.errors);
 			}
@@ -152,10 +154,43 @@ function transformOptions(sourceOptions, start, end, timezone, calendar) {
 						title: entry.summary,
 						start: entry.start.dateTime || entry.start.date, // try timed. will fall back to all-day
 						end: entry.end.dateTime || entry.end.date, // same
-						url: url,
+						//url: url,
 						location: entry.location,
 						description: entry.description
 					});
+
+    				movies.push({
+						title: entry.summary,
+						start: entry.start.dateTime || entry.start.date
+					});
+
+				});
+
+
+				movies.sort(function(a,b){
+  					return new Date(a.start) - new Date(b.start);
+				});
+
+				movies.forEach(function(entry) {
+					//console.log(JSON.stringify(movies) );
+					var movie_time = new Date(entry.start);
+					var last_child = new Date($('ul li:last-child span').text())
+					if(last_child.getTime() > movie_time.getTime()) {
+						return;
+					}
+				    $("ul").append('<li><a href="https://www.youtube.com/results?search_query='+entry.title+'" target="_blank" >'+entry.title+'</a><span>'+entry.start+'</span></li>');
+				});
+
+
+				var flags = [];
+				$( "ul > li a" ).each(function( index ) {
+				  	var name = $( this ).text();
+				  	if(flags[name]) {
+				  		$( "li" ).slice( index-1, index ).remove();
+				  		console.log('remove '+index+' '+$( this ).text() );
+				  		return;
+				  	}
+				  	flags[name] = true;
 				});
 
 				// call the success handler(s) and allow it to return a new events array
